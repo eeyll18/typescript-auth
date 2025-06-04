@@ -1,0 +1,81 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDE & Editor specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.*.sw?
+
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+build/
+out/
+
+# TypeScript specific
+*.tsbuildinfo
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lcov.info
+
+# Environment variables
+.env
+.env.*
+
+# Coverage directory
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.patch
+*.diff
+
+# Optional local development configurations
+# Örneğin, yerel veritabanı dosyaları veya diğer geçici dosyalar
+# local_db/
+# *.sqlite
+
+# Test-related
+# Bazen test raporları veya snapshot'lar burada tutulabilir, projenize göre ayarlayın
+# test-reports/
+# __snapshots__/ # Eğer Jest snapshot testleri kullanıyorsanız ve bunları repo'da istemiyorsanız
+
+# PM2 (Process Manager for Node.js)
+# Eğer PM2 kullanıyorsanız ve loglarını veya pid dosyalarını repo'da istemiyorsanız
+# pm2logs/
+# pids/
+# *.pid
+# ecosystem.config.js # Eğer yerel ayarlarınız varsa, genel bir template commit edebilirsiniz
+
+# Docker (Eğer Dockerfile veya docker-compose.yml yerel config içeriyorsa)
+# .dockerignore dosyasını ayrıca kullanmak daha iyidir, ancak bazı genel dosyalar buraya eklenebilir.
+
+# Secrets and credentials (GENELLİKLE .env İÇİNDE OLMALI, AMA EKSTRA ÖNLEM)
+# secret.*
+# credentials.*
+# *.pem
+# *.key
+
+# Arşivler
+*.zip
+*.tar
+*.gz
+*.rar

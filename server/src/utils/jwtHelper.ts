@@ -5,6 +5,7 @@ import { Types } from "mongoose";
 interface TokenPayload {
   userId: Types.ObjectId | string;
   roles: string[];
+  email: string; 
 }
 
 export const generateAccessToken = (payload: TokenPayload): string => {

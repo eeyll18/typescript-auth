@@ -22,19 +22,24 @@ const LoginPage: React.FC = () => {
     }
   }, [user, accessToken, navigate, from]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     try {
       const response = await apiClient.post("/auth/login", { email, password });
       auth.login(response.data.accessToken, response.data.user);
-      navigate(from, { replace: true });
+      // navigate(from, { replace: true }); // Başarılı login sonrası yönlendirme AuthProvider'daki useEffect ile yapılabilir veya burada kalabilir.
+      // Eğer burada kalacaksa, 'from'un doğru ayarlandığından emin olun. "/dashboard" iyi bir varsayılan.
     } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Login failed. Please check your credentials."
-      );
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message); 
+      } else if (err.message) {
+        setError(err.message); 
+      } else {
+        setError("Login failed. Please check your credentials or try again later."); 
+      }
+      console.error("Login attempt failed:", err); 
     } finally {
       setIsLoading(false);
     }

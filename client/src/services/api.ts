@@ -23,11 +23,27 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const originalRequest = error.config as any;
+
+    // Bu endpoint'lerden gelen 401'lerde token yenileme denemesi yapma
+    const NO_REFRESH_PATHS = [
+      "/auth/login",
+      "/auth/refresh-token",
+      "/auth/register",
+      // '/auth/logout'
+    ];
+
+    const requestUrl = originalRequest.url;
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      requestUrl &&
+      !NO_REFRESH_PATHS.some((path) => requestUrl.endsWith(path))
+    ) {
       originalRequest._retry = true;
       try {
-        const { data } = await axios.post(
+        const { data } = await axios.post<{ accessToken: string }>(
           `${API_URL}/auth/refresh-token`,
           {},
           { withCredentials: true }
@@ -38,13 +54,17 @@ apiClient.interceptors.response.use(
         ] = `Bearer ${data.accessToken}`;
         originalRequest.headers["Authorization"] = `Bearer ${data.accessToken}`;
         return apiClient(originalRequest);
-      } catch (refreshError) {
-        console.error("Refresh token failed", refreshError);
+      } catch (refreshError: any) {
+        console.error(
+          "Refresh token failed for a non-auth path:",
+          refreshError
+        );
         localStorage.removeItem("accessToken");
-        // window.location.href = '/login';
+        delete apiClient.defaults.headers.common["Authorization"];
         return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );

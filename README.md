@@ -1,4 +1,4 @@
-# Advanced Authentication & Authorization System (TypeScript Full-Stack)
+# Authentication & Authorization System (TypeScript Full-Stack)
 
 This is a full-stack authentication and authorization system tailored for modern web applications.
 It's built entirely with TypeScript, featuring a React frontend and a Node.js (Express.js) backend, with MongoDB as the database.

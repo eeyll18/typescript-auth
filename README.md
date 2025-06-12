@@ -113,7 +113,7 @@ This endeavor is primarily a **personal development project** aimed at deepening
     cp .env.example .env # If .env.example exists
     # Then edit .env
     ```
-    Example `.env` content for a Create React App project:
+    Example `.env` content for a Vite project:
     ```env
     VITE_API_URL=
     ```

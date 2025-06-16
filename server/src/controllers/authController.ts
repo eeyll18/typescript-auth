@@ -80,7 +80,17 @@ export const refreshToken = async (
     }
 
     const data = await authService.refreshUserToken(token);
-    res.json(data);
+    res.cookie("refreshToken", data.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+    });
+
+    res.json({
+      accessToken: data.accessToken,
+      user: data.user,
+    });
   } catch (error: any) {
     next(error);
   }

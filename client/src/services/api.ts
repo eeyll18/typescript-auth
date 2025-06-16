@@ -2,16 +2,24 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Memory'de tutulan access token değişkeni
+let accessTokenMemory: string | null = null;
+
+export const setAccessTokenMemory = (token: string | null) => {
+  accessTokenMemory = token;
+};
+
 const apiClient = axios.create({
   baseURL: API_URL,
   withCredentials: true,
 });
 
+// her request'te header'a memory'deki token'ı ekle
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    if (accessTokenMemory) {
+      config.headers = config.headers ?? {};
+      config.headers["Authorization"] = `Bearer ${accessTokenMemory}`;
     }
     return config;
   },
@@ -25,12 +33,12 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as any;
 
-    // Bu endpoint'lerden gelen 401'lerde token yenileme denemesi yapma
+    // Aşağıdaki endpoint'lerde token yenileme denemesi yapma
     const NO_REFRESH_PATHS = [
       "/auth/login",
       "/auth/refresh-token",
       "/auth/register",
-      // '/auth/logout'
+      // "/auth/logout"
     ];
 
     const requestUrl = originalRequest.url;
@@ -48,18 +56,13 @@ apiClient.interceptors.response.use(
           {},
           { withCredentials: true }
         );
-        localStorage.setItem("accessToken", data.accessToken);
-        apiClient.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${data.accessToken}`;
+        setAccessTokenMemory(data.accessToken);
+        apiClient.defaults.headers.common["Authorization"] = `Bearer ${data.accessToken}`;
         originalRequest.headers["Authorization"] = `Bearer ${data.accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError: any) {
-        console.error(
-          "Refresh token failed for a non-auth path:",
-          refreshError
-        );
-        localStorage.removeItem("accessToken");
+        console.error("Refresh token failed for a non-auth path:", refreshError);
+        setAccessTokenMemory(null);
         delete apiClient.defaults.headers.common["Authorization"];
         return Promise.reject(refreshError);
       }

@@ -10,32 +10,33 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, accessToken } = useAuth();
+
+  const auth = useAuth();
   const navigate = useNavigate();
 
+  // Eğer kullanıcı zaten login ise /dashboard'a yönlendir
   useEffect(() => {
-    if (user || accessToken) {
+    if (auth?.user && auth.accessToken) {
       navigate("/dashboard", { replace: true });
     }
-  }, [user, accessToken, navigate]);
+  }, [auth?.user, auth.accessToken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setIsLoading(true);
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
-      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const payload = { email, password };
@@ -50,7 +51,7 @@ const RegisterPage: React.FC = () => {
         navigate("/login");
       }, 2000);
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.message) {
+      if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
         setError("Registration failed. Please try again.");
@@ -60,6 +61,10 @@ const RegisterPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  if (auth?.user && auth.accessToken) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -147,6 +152,7 @@ const RegisterPage: React.FC = () => {
               </div>
             </div>
           )}
+
           {successMessage && (
             <div className="rounded-md bg-green-50 p-4 mt-4">
               <div className="flex">

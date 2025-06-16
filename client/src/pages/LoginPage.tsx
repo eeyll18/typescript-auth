@@ -1,53 +1,61 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import apiClient from "../services/api";
 
-//TODO: bilgiler yanlış girilince ekrana refresh token not found yazısı hatası çıkıyor
-// invalid credentials olacak - ayrıca refresh-token endpointine gidiyor hatada
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
   const auth = useAuth();
-  const { user, accessToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    if (user || accessToken) {
+    if (auth && !auth.isLoading && auth.user && auth.accessToken) {
       navigate(from, { replace: true });
     }
-  }, [user, accessToken, navigate, from]);
+  }, [auth, navigate, from]);
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+
     try {
       const response = await apiClient.post("/auth/login", { email, password });
-      auth.login(response.data.accessToken, response.data.user);
-      // navigate(from, { replace: true }); // Başarılı login sonrası yönlendirme AuthProvider'daki useEffect ile yapılabilir veya burada kalabilir.
-      // Eğer burada kalacaksa, 'from'un doğru ayarlandığından emin olun. "/dashboard" iyi bir varsayılan.
+      auth?.login(response.data.accessToken, response.data.user);
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message); 
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else if (err.message) {
-        setError(err.message); 
+        setError(err.message);
       } else {
-        setError("Login failed. Please check your credentials or try again later."); 
+        setError(
+          "Login failed. Please check your credentials or try again later."
+        );
       }
-      console.error("Login attempt failed:", err); 
+      console.error("Login attempt failed:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (user || accessToken) {
-    return null; 
+  if (auth?.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p>Loading session...</p>
+      </div>
+    );
   }
+
+  if (auth?.user && auth.accessToken) {
+    return <Navigate to={from} replace />;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">

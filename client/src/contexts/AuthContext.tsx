@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, type ReactNode, useCallback } from 'react';
-import apiClient from '../services/api';
+import apiClient, { setAccessTokenMemory } from '../services/api';
 
 interface User {
     _id: string;
@@ -24,23 +24,24 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('accessToken'));
-    const [isLoading, setIsLoading] = useState(true); 
+    const [accessToken, setAccessToken] = useState<string | null>(null); 
+    const [isLoading, setIsLoading] = useState(true);
+
 
     const login = (token: string, userData: User) => {
-        localStorage.setItem('accessToken', token);
         setAccessToken(token);
+        setAccessTokenMemory(token); 
         setUser(userData);
     };
 
     const logout = useCallback(async () => {
         try {
-            await apiClient.post('/auth/logout'); 
+            await apiClient.post('/auth/logout');
         } catch (error) {
             console.error("Logout failed on server:", error);
         } finally {
-            localStorage.removeItem('accessToken');
             setAccessToken(null);
+            setAccessTokenMemory(null);
             setUser(null);
         }
     }, []);
@@ -50,22 +51,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     useEffect(() => {
-        const fetchUser = async () => {
-            if (accessToken) {
-                try {
-                    const { data } = await apiClient.get<{ user: User }>('/users/me');
-                    setUser(data.user);
-                } catch (error) {
-                    console.error('Failed to fetch user, possibly expired token', error);
-                    if ((error as any).response?.status === 401) {
-                        logout();
-                    }
-                }
+        const fetchUserAndToken = async () => {
+            setIsLoading(true)
+            try {
+                // Sayfa açıldığında refresh token ile yeni access token isteği
+                const { data } = await apiClient.post<{ accessToken: string, user: User }>('/auth/refresh-token', {});
+                setAccessToken(data.accessToken);
+                setAccessTokenMemory(data.accessToken);
+                setUser(data.user);
+            } catch (error) {
+                console.error("Refresh token failed or not found", error);
+                setAccessToken(null);
+                setUser(null);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
-        fetchUser();
-    }, [accessToken, logout]);
+
+        fetchUserAndToken();
+    }, []);
 
     return (
         <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, hasRole }}>
